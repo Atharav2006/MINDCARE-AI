@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from app.schemas.error import ErrorResponse
+
 
 from app.config import settings
 from app.routes import (
@@ -62,11 +64,13 @@ def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal Server Error",
-            "message": "Something went wrong. Please try again later.",
-        },
+
+    error = ErrorResponse(
+        error="internal_server_error",
+        message="Something went wrong. Please try again later.",
     )
 
+    return JSONResponse(
+        status_code=500,
+        content=error.dict(),
+    )
