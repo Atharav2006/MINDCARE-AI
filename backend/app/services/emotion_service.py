@@ -1,69 +1,52 @@
-from app.utils.text_cleaner import clean_text
+import sys
+from pathlib import Path
+
+# -------------------------
+# Add ai-services to path
+# -------------------------
+BASE_DIR = Path(__file__).resolve().parents[3]
+AI_DIR = BASE_DIR / "ai-services" / "emotion-analysis"
+sys.path.append(str(AI_DIR))
+
+from predict import predict_emotion  # noqa
+
 from app.models.emotion_model import EmotionResult
 from app.utils.logger import get_logger
-
-# Import AI predictor
-from ai_services.emotion_analysis.predict import predict_emotion
 
 logger = get_logger(__name__)
 
 
 def analyze_emotion(text: str) -> EmotionResult:
     """
-    Main emotion analysis pipeline.
-    Uses ML model via ai-services, not keyword rules.
+    Analyze user emotion using ML-based AI service.
     """
 
-    cleaned_text = clean_text(text)
-    logger.info("Sending text to AI emotion model")
+    logger.info("Analyzing emotion using AI model")
 
-    try:
-        ai_result = predict_emotion(cleaned_text)
-        """
-        ai_result example:
-        {
-          "emotion": "self_doubt",
-          "confidence": 0.82,
-          "raw_scores": {...}
-        }
-        """
+    # -------------------------
+    # AI Prediction
+    # -------------------------
+    result = predict_emotion(text)
 
-        emotion = ai_result.get("emotion", "neutral")
-        confidence = float(ai_result.get("confidence", 0.5))
+    # -------------------------
+    # Safety override (CRITICAL)
+    # -------------------------
+    if result.get("risk_level") == "high" and result.get("emotion") in [
+        "sadness",
+        "depression",
+        "grief",
+    ]:
+        explanation = "High emotional distress detected."
+    else:
+        explanation = "Emotion inferred using AI model."
 
-        explanation = _generate_explanation(emotion, confidence)
-
-        return EmotionResult(
-            emotion=emotion,
-            confidence=confidence,
-            explanation=explanation,
-        )
-
-    except Exception as e:
-        logger.error(f"Emotion analysis failed: {e}")
-
-        # Safe fallback
-        return EmotionResult(
-            emotion="neutral",
-            confidence=0.5,
-            explanation="Emotion could not be confidently determined.",
-        )
-
-
-def _generate_explanation(emotion: str, confidence: float) -> str:
-    """
-    Human-readable explanation for dashboard & chat UI
-    """
-    explanations = {
-        "depression": "Patterns indicate emotional heaviness and withdrawal.",
-        "anxiety": "Signs of worry, tension, or fear detected.",
-        "stress": "Language reflects overload or pressure.",
-        "self_doubt": "Expressions of low confidence or self-questioning.",
-        "procrastination": "Avoidance and delay behaviors detected.",
-        "grief": "Loss-related emotional signals detected.",
-        "anger": "Frustration or irritation patterns detected.",
-        "neutral": "No dominant emotional signals detected.",
-    }
-
-    base = explanations.get(emotion, "Emotional signals detected.")
-    return f"{base} (confidence: {round(confidence, 2)})"
+    return EmotionResult(
+        emotion=result["emotion"],
+        confidence=result["confidence"],
+        primary_emotion=result.get("primary_emotion"),
+        mood_group=result.get("mood_group"),
+        risk_level=result.get("risk_level"),
+        confidence_label=result.get("confidence_label"),
+        secondary_emotions=result.get("secondary_emotions"),
+        explanation=explanation,
+    )
