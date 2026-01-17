@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.schemas.error import ErrorResponse
 
-
 from app.config import settings
 from app.routes import (
     chat_routes,

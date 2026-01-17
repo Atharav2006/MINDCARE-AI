@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings
+
 from typing import List
 
 
@@ -54,4 +55,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
