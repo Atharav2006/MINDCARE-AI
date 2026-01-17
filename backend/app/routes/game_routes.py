@@ -1,9 +1,10 @@
 from fastapi import APIRouter
+from app.schemas.game import GameRecommendationResponse
 
 router = APIRouter()
 
 
-@router.get("/recommend")
+@router.get("/recommend", response_model=GameRecommendationResponse)
 def recommend_games():
     """
     Returns recommended games based on emotional state.
