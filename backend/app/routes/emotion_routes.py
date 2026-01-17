@@ -1,10 +1,14 @@
 from fastapi import APIRouter
+from app.schemas.emotion import (
+    EmotionAnalyzeRequest,
+    EmotionAnalyzeResponse,
+)
 
 router = APIRouter()
 
 
-@router.post("/analyze")
-def analyze_emotion(payload: dict):
+@router.post("/analyze", response_model=EmotionAnalyzeResponse)
+def analyze_emotion(payload: EmotionAnalyzeRequest):
     """
     Analyzes emotion from text input.
     """
