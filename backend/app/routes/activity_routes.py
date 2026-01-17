@@ -1,9 +1,10 @@
 from fastapi import APIRouter
+from app.schemas.activity import ActivityRecommendationResponse
 
 router = APIRouter()
 
 
-@router.get("/recommend")
+@router.get("/recommend", response_model=ActivityRecommendationResponse)
 def recommend_activities():
     """
     Returns recommended mental health activities.
